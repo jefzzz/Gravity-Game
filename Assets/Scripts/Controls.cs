@@ -3,26 +3,46 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Controls : MonoBehaviour {
-    public float fuelAmount = 1;
-    public float fuelConsumptionRate = 0.1f;
+    public float velMag = 0;
+    public Color playerColor = new Color(1,1,1,0.5f);
+
+    public float startVel = 0;
+    public float initialFuel = 100; //total deltaV
+    public float remainingFuel;
+    public float fuelConsumptionRate = 10; //rate of deltaV
+
     public GameObject fuelBar;
 
-    public bool isInfluenced = false;
     private Rigidbody rb;
-    public bool isRotating = false;
-    public float thrustForce = 25;
-    public float velMag = 0;
-    public float interPlanetarySpeedLimit = 500;
-    public float hardLimit = 1000;
-    public float decelerationRate = 100; // units per second per second
-
     public ParticleSystem engineParticles;
+    public Light engineLight;
+    public TrailRenderer trail;
     private Vector3 refVel;
+
+    private bool isInfluenced = false;
+
+    //junk
+    private float interPlanetarySpeedLimit = 500;
+    private float hardLimit = 1000;
+    private float decelerationRate = 100; // units per second per second
+    //junk
+    
     // Use this for initialization
     void Start () {
         rb = GetComponent<Rigidbody>();
-        rb.AddForce(transform.forward * 5000, ForceMode.Acceleration);
-	}
+        rb.AddForce(transform.forward * startVel, ForceMode.VelocityChange);
+        //fuel stuff
+        remainingFuel = initialFuel;
+
+        //pretty stuff
+        ParticleSystem.MainModule settings = engineParticles.main;
+        settings.startColor = new ParticleSystem.MinMaxGradient(playerColor);
+        engineLight.color = playerColor;
+        playerColor.a = 1;
+        trail.startColor = playerColor;
+        playerColor.a = 0;
+        trail.endColor = playerColor;
+    }
     void Update()
     {
         
@@ -30,25 +50,29 @@ public class Controls : MonoBehaviour {
     void FixedUpdate()
     {
         velMag = rb.velocity.magnitude;
+
+        fuelBar.transform.localScale = new Vector3(remainingFuel/initialFuel, 1, 1);
+        remainingFuel = Mathf.Clamp(remainingFuel, 0, int.MaxValue);
         if (Input.GetMouseButton(0))
         {
-            fuelAmount -= fuelConsumptionRate * Time.deltaTime;
-            fuelAmount = Mathf.Clamp(fuelAmount, 0, 1);
-            fuelBar.transform.localScale = new Vector3(fuelAmount, 1, 1);
             Rotate();
-            if (fuelAmount > 0)
+            if (remainingFuel > 0)
             {
                 Thrust();
+                remainingFuel -= fuelConsumptionRate * Time.fixedDeltaTime;
                 engineParticles.Play();
+                engineLight.enabled = true;
             }
             else
             {
                 engineParticles.Stop();
+                engineLight.enabled = false;
             }
         }
         else
         {
             engineParticles.Stop();
+            engineLight.enabled = false;
         }
         if (!isInfluenced) //if player is in interplanetary space, speed is limited.
         {
@@ -76,7 +100,7 @@ public class Controls : MonoBehaviour {
     }
     private void Thrust()
     {
-        rb.AddForce(transform.forward * thrustForce, ForceMode.Acceleration);
+        rb.AddForce(transform.forward * fuelConsumptionRate * Time.fixedDeltaTime, ForceMode.VelocityChange);
     }
     private void SmoothClampVelocity(float target, float smoothTime)
     {
@@ -104,9 +128,10 @@ public class Controls : MonoBehaviour {
     }
     private void Reset()
     {
-        rb.velocity = Vector3.zero;
         transform.position = Vector3.zero;
         transform.rotation = Quaternion.identity;
-        fuelAmount = 1;
+        remainingFuel = initialFuel;
+        trail.Clear();
+        rb.velocity = Vector3.zero;
     }
 }

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 [ExecuteInEditMode]
 public class ShowInfluence : MonoBehaviour {
+    public bool isScale;
     public bool isGR;
     public bool isSR;
-    private Planet planet;
+    private MassiveObject planet;
+    private float r;
     private float gR;
     private float sR;
 	// Use this for initialization
@@ -19,7 +21,13 @@ public class ShowInfluence : MonoBehaviour {
     }
     void displayInfluence()
     {
-        planet = transform.root.GetComponent<Planet>();
+        planet = transform.parent.GetComponent<MassiveObject>();
+        if (isScale)
+        {
+            r = planet.radius;
+            transform.localScale = new Vector3(r,r,r);
+        }
+
         if (isGR)
         {            
             gR = planet.gravitationalRadius;
