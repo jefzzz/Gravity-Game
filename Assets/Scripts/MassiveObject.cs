@@ -23,7 +23,7 @@ public class MassiveObject : MonoBehaviour {
     {
         Color randomColor = Random.ColorHSV(0f, 1f, .4f, .6f, 0.9f, 1f);
         trail = GetComponent<TrailRenderer>();
-        transform.FindChild("scale/planet").GetComponent<MeshRenderer>().material.color = randomColor;
+        transform.FindChild("mesh/planet").GetComponent<MeshRenderer>().material.color = randomColor;
         trail.startColor = randomColor;
         randomColor.a = 0;
         trail.endColor = randomColor;
@@ -52,8 +52,12 @@ public class MassiveObject : MonoBehaviour {
             print("Planet to Star collision!");
         }
     }
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        
+        if (other.gameObject.layer.Equals(12))
+        {
+            print(other.gameObject.name);
+            Destroy(gameObject, 2);
+        }
     }
 }

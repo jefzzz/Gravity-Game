@@ -108,6 +108,13 @@ public class Controls : MonoBehaviour {
         rb.velocity = Vector3.SmoothDamp(rb.velocity, clampedVel, ref refVel, smoothTime);
         rb.velocity = Vector3.ClampMagnitude(rb.velocity, hardLimit);
     }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.layer.Equals(12))
+        {
+            Reset();
+        }
+    }
     private void OnTriggerStay(Collider other)
     {
         if (other.gameObject.layer.Equals(10))
